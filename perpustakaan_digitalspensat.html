@@ -1,0 +1,526 @@
+```html
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perpustakaan Digital & OPAC Sekolah</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 h-full flex flex-col font-sans">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/10 p-2 rounded-xl">
+                    <i class="fa-solid fa-book-open-reader text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Perpustakaan SMAN 1 Nusantara</h1>
+                    <p class="text-xs text-indigo-200">Sistem OPAC & Layanan Digital</p>
+                </div>
+            </div>
+
+            <!-- Role & User Profile Switcher -->
+            <div class="flex items-center space-x-3">
+                <!-- Status Login Siswa -->
+                <div id="userAuthBadge" class="hidden sm:flex items-center space-x-2 bg-indigo-800 px-3 py-1.5 rounded-xl text-xs">
+                    <i class="fa-solid fa-circle-user text-indigo-300 text-base"></i>
+                    <span id="loggedUserName">Siswa (Tamu)</span>
+                </div>
+                <button id="authActionButton" onclick="handleAuthAction()" class="bg-white text-indigo-700 hover:bg-indigo-50 px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-sm transition-all">
+                    <i class="fa-solid fa-right-to-bracket mr-1"></i> Login Online
+                </button>
+
+                <!-- Role Switcher (User / Admin) -->
+                <div class="bg-indigo-900 p-1 rounded-xl flex items-center space-x-1 border border-indigo-600">
+                    <button onclick="switchRole('user')" id="btn-role-user" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-white text-indigo-700 shadow-sm">
+                        Katalog
+                    </button>
+                    <button onclick="switchRole('admin')" id="btn-role-admin" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-indigo-200 hover:text-white">
+                        Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 overflow-y-auto">
+
+        <!-- ==================== AREA PENGGUNA (OPAC & KATALOG) ==================== -->
+        <div id="view-user" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            
+            <!-- Hero Banner & Search -->
+            <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl p-6 sm:p-10 text-white shadow-lg relative overflow-hidden">
+                <div class="relative z-10 max-w-2xl space-y-4">
+                    <span class="bg-indigo-500/50 text-indigo-100 text-xs font-medium px-3 py-1 rounded-full uppercase tracking-wider">Layanan Perpustakaan Terpadu</span>
+                    <h2 class="text-2xl sm:text-4xl font-bold tracking-tight">Akses Buku Fisik & E-Book Sekolah</h2>
+                    <p class="text-indigo-100 text-sm sm:text-base">Pilih buku untuk dipinjam langsung di perpustakaan sekolah atau baca secara online (khusus pengguna yang sudah login).</p>
+                    
+                    <!-- Search Bar -->
+                    <div class="flex bg-white rounded-xl p-2 shadow-md">
+                        <div class="flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        <input type="text" id="searchInput" oninput="filterBooks()" placeholder="Cari judul buku, pengarang, atau kategori..." class="w-full px-3 py-2 text-slate-800 focus:outline-none text-sm sm:text-base">
+                        <button onclick="filterBooks()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors">
+                            Cari
+                        </button>
+                    </div>
+                </div>
+                <div class="absolute right-[-20px] bottom-[-40px] opacity-10 text-white text-9xl pointer-events-none hidden md:block">
+                    <i class="fa-solid fa-book"></i>
+                </div>
+            </div>
+
+            <!-- Filter Kategori -->
+            <div class="flex space-x-2 overflow-x-auto pb-2 scrollbar-none" id="categoryFilters">
+                <button onclick="filterCategory('Semua')" class="cat-btn bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap shadow-sm transition-all">Semua Koleksi</button>
+                <button onclick="filterCategory('Kurikulum Merdeka')" class="cat-btn bg-white text-slate-600 hover:bg-slate-100 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap border border-slate-200 transition-all">Kurikulum Merdeka</button>
+                <button onclick="filterCategory('Sains & Teknologi')" class="cat-btn bg-white text-slate-600 hover:bg-slate-100 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap border border-slate-200 transition-all">Sains & Teknologi</button>
+                <button onclick="filterCategory('Fiksi & Sastra')" class="cat-btn bg-white text-slate-600 hover:bg-slate-100 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap border border-slate-200 transition-all">Fiksi & Sastra</button>
+                <button onclick="filterCategory('Sejarah & Sosial')" class="cat-btn bg-white text-slate-600 hover:bg-slate-100 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap border border-slate-200 transition-all">Sejarah & Sosial</button>
+            </div>
+
+            <!-- Daftar Buku Grid -->
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-800">Daftar Katalog Buku (<span id="bookCount">0</span>)</h3>
+                    <span class="text-xs text-slate-500"><i class="fa-solid fa-shield-halved text-indigo-600 mr-1"></i> Akses online wajib login akun sekolah</span>
+                </div>
+                
+                <div id="bookGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Dinamis via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==================== AREA ADMIN (MANAJEMEN) ==================== -->
+        <div id="view-admin" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 hidden">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="bg-indigo-100 text-indigo-600 p-4 rounded-xl text-2xl">
+                        <i class="fa-solid fa-books"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium">Total Koleksi Buku</p>
+                        <h4 class="text-2xl font-bold text-slate-800" id="statTotalBooks">0</h4>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="bg-emerald-100 text-emerald-600 p-4 rounded-xl text-2xl">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium">Siswa Terdaftar</p>
+                        <h4 class="text-2xl font-bold text-slate-800">482 Akun</h4>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                    <div class="bg-amber-100 text-amber-600 p-4 rounded-xl text-2xl">
+                        <i class="fa-solid fa-laptop-code"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-500 font-medium">Sesi Online Aktif</p>
+                        <h4 class="text-2xl font-bold text-slate-800">18 Pengguna</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabel Manajemen Buku -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">Manajemen Katalog Buku</h3>
+                        <p class="text-xs text-slate-500">Kelola ketersediaan buku fisik dan akses online</p>
+                    </div>
+                    <button onclick="openAddBookModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm transition-all flex items-center space-x-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Tambah Buku Baru</span>
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                                <th class="p-4 font-semibold">Judul Buku</th>
+                                <th class="p-4 font-semibold">Penulis</th>
+                                <th class="p-4 font-semibold">Kategori</th>
+                                <th class="p-4 font-semibold">Opsi Layanan</th>
+                                <th class="p-4 font-semibold text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminBookTableBody">
+                            <!-- Dinamis via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ==================== MODAL LOGIN PENGGUNA ==================== -->
+    <div id="loginModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-indigo-700 text-white px-6 py-4 flex justify-between items-center">
+                <h4 class="font-bold text-lg"><i class="fa-solid fa-right-to-bracket mr-2"></i> Login Anggota Perpustakaan</h4>
+                <button onclick="closeLoginModal()" class="text-white/80 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nomor Induk Siswa / Guru (NIS/NIP)</label>
+                    <input type="text" id="loginIdNumber" required class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Contoh: 10293847">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Kata Sandi / PIN</label>
+                    <input type="password" id="loginPassword" required class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••">
+                </div>
+                <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-800">
+                    <i class="fa-solid fa-info-circle mr-1"></i> Login diperlukan untuk membaca koleksi buku digital secara online dari rumah/sekolah.
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeLoginModal()" class="px-4 py-2 border rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-sm">Masuk Akun</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ==================== MODAL BACA BUKU ONLINE (READER) ==================== -->
+    <div id="readerModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-4xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
+                <div>
+                    <h4 id="readerBookTitle" class="font-bold text-lg">Judul Buku</h4>
+                    <p id="readerBookAuthor" class="text-xs text-slate-400">Penulis</p>
+                </div>
+                <button onclick="closeReader()" class="bg-white/10 hover:bg-white/20 p-2 rounded-xl text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="flex-1 p-6 sm:p-10 overflow-y-auto bg-slate-50 text-slate-700 space-y-6">
+                <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex justify-between items-center text-xs text-slate-400 border-b pb-2">
+                        <span>Modul Pembelajaran Digital Resmi</span>
+                        <span>Halaman 1 dari 12</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800">Bab 1: Pengantar Materi & Kurikulum</h3>
+                    <p class="leading-relaxed text-sm sm:text-base">
+                        Selamat datang di pembaca digital perpustakaan SMAN 1 Nusantara. Dokumen ini dilindungi dan diakses melalui sesi akun terverifikasi. Nikmati kemudahan belajar mandiri dengan materi berkualitas tinggi.
+                    </p>
+                </div>
+            </div>
+            <div class="bg-white border-t border-slate-200 px-6 py-3 flex justify-between items-center">
+                <button class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-semibold">Sebelumnya</button>
+                <span class="text-xs font-medium text-slate-500">Hal. 1 / 12</span>
+                <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-semibold">Selanjutnya</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================== MODAL TAMBAH BUKU ADMIN ==================== -->
+    <div id="addBookModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-indigo-700 text-white px-6 py-4 flex justify-between items-center">
+                <h4 class="font-bold text-lg">Tambah Katalog Buku</h4>
+                <button onclick="closeAddBookModal()" class="text-white/80 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="addBookForm" onsubmit="handleAddNewBook(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Judul Buku</label>
+                    <input type="text" id="newTitle" required class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Contoh: Biologi SMA Kelas XII">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Penulis</label>
+                    <input type="text" id="newAuthor" required class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Nama Penulis">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Kategori</label>
+                        <select id="newCategory" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Kurikulum Merdeka">Kurikulum Merdeka</option>
+                            <option value="Sains & Teknologi">Sains & Teknologi</option>
+                            <option value="Fiksi & Sastra">Fiksi & Sastra</option>
+                            <option value="Sejarah & Sosial">Sejarah & Sosial</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Tersedia Akses</label>
+                        <select id="newAccess" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Keduanya (Fisik & Online)">Keduanya (Fisik & Online)</option>
+                            <option value="Fisik Saja (Pinjam di Tempat)">Fisik Saja (Pinjam di Tempat)</option>
+                            <option value="Online Saja (E-Book)">Online Saja (E-Book)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t">
+                    <button type="button" onclick="closeAddBookModal()" class="px-4 py-2 border rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-sm">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center space-x-2 text-sm">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMsg">Berhasil!</span>
+    </div>
+
+    <!-- JavaScript Aplikasi -->
+    <script>
+        let currentUser = null; // null berarti belum login
+
+        let books = [
+            { id: 1, title: "Matematika Tingkat Lanjut Kelas XI", author: "Tim Kemendikbudristek", category: "Kurikulum Merdeka", accessType: "Keduanya (Fisik & Online)", coverBg: "from-blue-500 to-indigo-600" },
+            { id: 2, title: "Fisika Dasar Sekolah Menengah", author: "Dr. Sutanto, M.Pd.", category: "Sains & Teknologi", accessType: "Online Saja (E-Book)", coverBg: "from-purple-500 to-indigo-700" },
+            { id: 3, title: "Sejarah Perjuangan Nasional", author: "Prof. H. Ahmad Mansur", category: "Sejarah & Sosial", accessType: "Fisik Saja (Pinjam di Tempat)", coverBg: "from-amber-500 to-orange-600" },
+            { id: 4, title: "Kumpulan Cerpen Nusantara", author: "Dewi Lestari dkk.", category: "Fiksi & Sastra", accessType: "Keduanya (Fisik & Online)", coverBg: "from-emerald-500 to-teal-700" }
+        ];
+
+        let currentCategory = "Semua";
+
+        // Autentikasi Modal Handler
+        function handleAuthAction() {
+            if (currentUser) {
+                // Proses Logout
+                currentUser = null;
+                document.getElementById('loggedUserName').innerText = "Siswa (Tamu)";
+                document.getElementById('authActionButton').innerHTML = `<i class="fa-solid fa-right-to-bracket mr-1"></i> Login Online`;
+                showToast("Anda telah keluar (Logout).");
+                renderUserBooks();
+            } else {
+                // Buka Modal Login
+                document.getElementById('loginModal').classList.remove('hidden');
+            }
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+        }
+
+        function handleLoginSubmit(e) {
+            e.preventDefault();
+            const idNum = document.getElementById('loginIdNumber').value;
+            currentUser = { name: "Siswa (" + idNum + ")" };
+            
+            document.getElementById('loggedUserName').innerText = currentUser.name;
+            document.getElementById('authActionButton').innerHTML = `<i class="fa-solid fa-right-from-bracket mr-1"></i> Logout`;
+            closeLoginModal();
+            renderUserBooks();
+            showToast("Berhasil login! Anda sekarang dapat mengakses semua buku online.");
+        }
+
+        // Switch Role (Katalog vs Admin)
+        function switchRole(role) {
+            const userView = document.getElementById('view-user');
+            const adminView = document.getElementById('view-admin');
+            const btnUser = document.getElementById('btn-role-user');
+            const btnAdmin = document.getElementById('btn-role-admin');
+
+            if (role === 'user') {
+                userView.classList.remove('hidden');
+                adminView.classList.add('hidden');
+                btnUser.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-white text-indigo-700 shadow-sm";
+                btnAdmin.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-indigo-200 hover:text-white";
+                renderUserBooks();
+            } else {
+                userView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                btnAdmin.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all bg-white text-indigo-700 shadow-sm";
+                btnUser.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-indigo-200 hover:text-white";
+                renderAdminBooks();
+            }
+        }
+
+        // Render Katalog Buku Pengguna dengan Opsi Akses Fisik & Online
+        function renderUserBooks(filteredList = books) {
+            const grid = document.getElementById('bookGrid');
+            document.getElementById('bookCount').innerText = filteredList.length;
+            
+            if (filteredList.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400">Tidak ada buku yang ditemukan.</div>`;
+                return;
+            }
+
+            grid.innerHTML = filteredList.map(book => {
+                let actionButtons = '';
+                
+                if (book.accessType.includes('Fisik') || book.accessType.includes('Keduanya')) {
+                    actionButtons += `<button onclick="showToast('Permintaan pinjam buku fisik dicatat. Silakan ambil di perpustakaan.')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex-1 text-center"><i class="fa-solid fa-book-bookmark mr-1"></i> Pinjam Fisik</button>`;
+                }
+                
+                if (book.accessType.includes('Online') || book.accessType.includes('Keduanya')) {
+                    if (currentUser) {
+                        actionButtons += `<button onclick="openReader('${book.title}', '${book.author}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex-1 text-center shadow-sm"><i class="fa-solid fa-laptop mr-1"></i> Baca Online</button>`;
+                    } else {
+                        actionButtons += `<button onclick="handleLoginRequired()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex-1 text-center"><i class="fa-solid fa-lock mr-1"></i> Login untuk Baca</button>`;
+                    }
+                }
+
+                return `
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden group">
+                        <div class="h-36 bg-gradient-to-br ${book.coverBg} p-4 flex flex-col justify-between text-white relative">
+                            <span class="self-start bg-black/20 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-medium">${book.category}</span>
+                            <div>
+                                <h4 class="font-bold text-base line-clamp-2 group-hover:underline">${book.title}</h4>
+                            </div>
+                        </div>
+                        <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+                            <div class="space-y-1">
+                                <p class="text-xs text-slate-500"><i class="fa-solid fa-pen-nib mr-1"></i> ${book.author}</p>
+                                <div class="pt-1">
+                                    <span class="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">${book.accessType}</span>
+                                </div>
+                            </div>
+                            <div class="pt-3 border-t border-slate-100 flex gap-2">
+                                ${actionButtons}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function handleLoginRequired() {
+            showToast("Silakan login terlebih dahulu untuk mengakses buku secara online.");
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+
+        // Filter Kategori
+        function filterCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.innerText.includes(category) || (category === 'Semua' && btn.innerText.includes('Semua'))) {
+                    btn.className = "cat-btn bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap shadow-sm transition-all";
+                } else {
+                    btn.className = "cat-btn bg-white text-slate-600 hover:bg-slate-100 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap border border-slate-200 transition-all";
+                }
+            });
+            filterBooks();
+        }
+
+        function filterBooks() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            let result = books;
+
+            if (currentCategory !== 'Semua') {
+                result = result.filter(b => b.category === currentCategory);
+            }
+            if (query.trim() !== '') {
+                result = result.filter(b => b.title.toLowerCase().includes(query) || b.author.toLowerCase().includes(query));
+            }
+            renderUserBooks(result);
+        }
+
+        // Render Admin Table
+        function renderAdminBooks() {
+            const tbody = document.getElementById('adminBookTableBody');
+            document.getElementById('statTotalBooks').innerText = books.length;
+
+            tbody.innerHTML = books.map(book => `
+                <tr class="border-b border-slate-100 hover:bg-slate-50/50">
+                    <td class="p-4 font-semibold text-slate-800">${book.title}</td>
+                    <td class="p-4 text-slate-600">${book.author}</td>
+                    <td class="p-4"><span class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full text-xs font-medium">${book.category}</span></td>
+                    <td class="p-4 text-slate-600 text-xs">${book.accessType}</td>
+                    <td class="p-4 text-right">
+                        <button onclick="deleteBook(${book.id})" class="bg-rose-50 hover:bg-rose-100 text-rose-600 p-2 rounded-lg text-xs transition-colors" title="Hapus Buku">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Modal Reader
+        function openReader(title, author) {
+            document.getElementById('readerBookTitle').innerText = title;
+            document.getElementById('readerBookAuthor').innerText = author;
+            document.getElementById('readerModal').classList.remove('hidden');
+        }
+
+        function closeReader() {
+            document.getElementById('readerModal').classList.add('hidden');
+        }
+
+        // Modal Add Book
+        function openAddBookModal() {
+            document.getElementById('addBookModal').classList.remove('hidden');
+        }
+
+        function closeAddBookModal() {
+            document.getElementById('addBookModal').classList.add('hidden');
+            document.getElementById('addBookForm').reset();
+        }
+
+        function handleAddNewBook(event) {
+            event.preventDefault();
+            const title = document.getElementById('newTitle').value;
+            const author = document.getElementById('newAuthor').value;
+            const category = document.getElementById('newCategory').value;
+            const accessType = document.getElementById('newAccess').value;
+            
+            const gradients = ["from-blue-500 to-indigo-600", "from-purple-500 to-indigo-700", "from-emerald-500 to-teal-700", "from-amber-500 to-orange-600"];
+            const randomBg = gradients[Math.floor(Math.random() * gradients.length)];
+
+            books.push({
+                id: books.length > 0 ? books[books.length - 1].id + 1 : 1,
+                title, author, category, accessType, coverBg: randomBg
+            });
+
+            closeAddBookModal();
+            renderAdminBooks();
+            showToast("Buku baru berhasil ditambahkan!");
+        }
+
+        function deleteBook(id) {
+            books = books.filter(b => b.id !== id);
+            renderAdminBooks();
+            showToast("Buku berhasil dihapus.");
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        window.onload = function() {
+            renderUserBooks();
+        };
+    </script>
+</body>
+</html>
+```
